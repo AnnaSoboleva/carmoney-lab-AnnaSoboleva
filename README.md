@@ -30,6 +30,21 @@ Docker'а на ноутбуке нет? Тогда локально работа
 | `make down` | остановить сервис |
 | `make seed` | перезалить учебные данные |
 | `make help` | список всех команд |
+| `make ps` | состояние контейнеров |
+| `make logs` | поток логов `backend` |
+
+## Как проверить, что сервис жив
+
+После `make up` (`docker compose up -d --build`) сервис стартует на порту `${APP_PORT:-8080}`,
+а в логах появится строка встроенного PHP-сервера.
+
+1. `make ps` — статус контейнеров `backend` и `db`. У `db` есть healthcheck (`mysqladmin ping`,
+   интервал 5 с, 20 ретраев), пока он не `healthy`, `backend` не стартует (`depends_on`).
+2. `make logs` — поток логов `backend`; дождитесь, пока `php -S 0.0.0.0:8080` поднимется.
+3. `curl http://localhost:${APP_PORT:-8080}/health` — приложение отвечает 200, если роутер жив.
+   Эндпоинт уже описан в таблице API ниже.
+
+Без Makefile: `docker compose ps`, `docker compose logs backend`, `curl http://localhost:8080/health`.
 
 ## API
 
