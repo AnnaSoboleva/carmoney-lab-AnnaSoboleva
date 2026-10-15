@@ -8,6 +8,7 @@ use CarMoneyLab\Domain\ApplicationValidator;
 use CarMoneyLab\Domain\AssessmentService;
 use CarMoneyLab\Domain\DecisionEngine;
 use CarMoneyLab\Domain\LtvCalculator;
+use CarMoneyLab\Domain\MileageRule;
 use CarMoneyLab\Domain\VehicleAge;
 use CarMoneyLab\Domain\VinValidator;
 use CarMoneyLab\Http\ApplicationController;
@@ -35,6 +36,7 @@ final class AppFactory
             ),
             new LtvCalculator(),
             new DecisionEngine($rules['ltv']),
+            new MileageRule($rules['mileage']),
             new VehicleAge((int) date('Y')),
         );
 

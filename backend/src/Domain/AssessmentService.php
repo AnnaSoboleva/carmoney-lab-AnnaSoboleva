@@ -5,11 +5,13 @@ declare(strict_types=1);
 namespace CarMoneyLab\Domain;
 
 /**
- * Предварительная оценка заявки: валидация -> LTV -> решение -> лимит.
+ * Предварительная оценка заявки: валидация -> LTV -> решение -> правило
+ * по пробегу -> лимит.
  *
- * Лимит сейчас равен запрошенной сумме при approve и нулю в остальных случаях.
- * Расчёт лимита по максимальному LTV для возраста авто (справочник
- * rules.ltv_by_age) — задача LOAN-12, она ещё не сделана.
+ * Лимит сейчас равен запрошенной сумме при approve и нулю в остальных случаях
+ * (в том числе при даунгрейде approve -> review из-за пробега). Расчёт лимита
+ * по максимальному LTV для возраста авто (справочник rules.ltv_by_age) —
+ * задача LOAN-12, она ещё не сделана.
  */
 final class AssessmentService
 {
@@ -17,25 +19,32 @@ final class AssessmentService
         private readonly ApplicationValidator $validator,
         private readonly LtvCalculator $ltvCalculator,
         private readonly DecisionEngine $decisionEngine,
+        private readonly MileageRule $mileageRule,
         private readonly VehicleAge $vehicleAge,
     ) {
     }
 
     /**
      * @param array<string,mixed> $payload
-     * @return array{vehicle_age:int,ltv:float,decision:string,approved_limit:int,input:array<string,mixed>}
+     * @return array{vehicle_age:int,ltv:float,decision:string,review_reason:?string,approved_limit:int,input:array<string,mixed>}
      */
     public function assess(array $payload): array
     {
         $input = $this->validator->validate($payload);
 
         $ltv = $this->ltvCalculator->calculate($input['requested_amount'], $input['market_value']);
-        $decision = $this->decisionEngine->decide($ltv);
+
+        $ltvDecision = $this->decisionEngine->decide($ltv);
+        ['decision' => $decision, 'review_reason' => $reviewReason] = $this->mileageRule->apply(
+            $ltvDecision,
+            $input['mileage'],
+        );
 
         return [
             'vehicle_age' => $this->vehicleAge->inYears($input['year']),
             'ltv' => $ltv,
             'decision' => $decision,
+            'review_reason' => $reviewReason,
             'approved_limit' => $decision === DecisionEngine::APPROVE ? $input['requested_amount'] : 0,
             'input' => $input,
         ];
