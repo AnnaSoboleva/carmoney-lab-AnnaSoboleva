@@ -30,5 +30,5 @@ db/seed.sql:31 — INSERT c mileage_km.
 tests/Unit/ApplicationValidatorTest.php:34 — mileage => 84000.
 tests/Unit/AssessmentServiceTest.php:38 — mileage => 96000.
 README.md:62 — пример curl c mileage: 84000.
-В DecisionEngine, LtvCalculator, AssessmentService, ApplicationController — чтения mileage нет.
+В DecisionEngine, LtvCalculator, AssessmentService, ApplicationController — чтения mileage нет...
 
